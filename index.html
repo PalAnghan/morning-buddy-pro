@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Morning Buddy Pro 💕</title>
+
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ff9aa5" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Lottie -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.5/lottie.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Background -->
+  <div class="bg"></div>
+
+  <!-- Floating hearts & butterflies -->
+  <div class="float heart h1">❤️</div>
+  <div class="float heart h2">💖</div>
+  <div class="float heart h3">💘</div>
+  <div class="float butterfly b1">🦋</div>
+  <div class="float butterfly b2">🦋</div>
+  <div class="float butterfly b3">🦋</div>
+
+  <div class="app">
+
+    <!-- Header -->
+    <header class="header">
+      <h1 class="app-title">Morning Buddy 💐</h1>
+      <p class="tag">A cute wake-up world just for her 💕</p>
+    </header>
+
+    <!-- HOME SCREEN -->
+    <section id="screen-home" class="screen active-screen">
+
+      <div class="card mascot-card">
+        <div class="mascot-avatar">
+          <div class="mascot-hair"></div>
+          <div class="mascot-face">
+            <class="mascot-eye left"></class>
+            <div class="mascot-eye left"></div>
+            <div class="mascot-eye right"></div>
+            <div class="mascot-smile"></div>
+          </div>
+        </div>
+
+        <div class="mascot-text">
+          <p id="mascotMessage">Good morning! I'm proud of you 💕</p>
+        </div>
+
+        <div class="mascot-lottie">
+          <div id="lottieBox" style="width: 130px; height: 130px; margin:auto;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>💞 Today’s Vibe</h2>
+        <p id="goalStatus" class="goal-text"></p>
+        <p id="homeStreakSummary" class="mini-text">Start your streak today 🌸</p>
+      </div>
+
+      <div class="card">
+        <h2>😂 Cute Message</h2>
+        <button class="btn neon" onclick="sendMessage()">Send a smile 💌</button>
+        <p id="messageBox" class="msg"></p>
+      </div>
+
+    </section>
+
+    <!-- GOALS SCREEN -->
+    <section id="screen-goals" class="screen">
+      <div class="card">
+        <h2>🎯 Wake-Up Goals</h2>
+
+        <label>Your Goal Time</label>
+        <input type="time" id="myGoal" />
+
+        <label>Her Goal Time</label>
+        <input type="time" id="friendGoal" />
+
+        <button class="btn neon" onclick="saveGoals()">Save Goals</button>
+      </div>
+
+      <div class="card">
+        <h2>⏰ Alarm</h2>
+        <input type="time" id="alarmTime" />
+
+        <button class="btn neon" onclick="saveAlarmTime()">Save Alarm Time</button>
+        <p id="alarmSavedText" class="result"></p>
+
+        <button class="btn neon" onclick="playAlarm()">🔊 Test Alarm</button>
+        <button class="btn neon stop" onclick="stopAlarm()">🛑 Stop Alarm</button>
+      </div>
+    </section>
+
+    <!-- ACTIVITIES SCREEN -->
+    <section id="screen-activities" class="screen">
+      <div class="card">
+        <h2>📝 Morning Rituals</h2>
+
+        <h3 class="section-title">🌄 Essentials</h3>
+        <div class="addBox">
+          <input id="essentialInput" placeholder="Drink water…" />
+          <button class="btn small neon" onclick="addActivity('essentials')">+</button>
+        </div>
+        <div id="essentialsList" class="chips"></div>
+
+        <h3 class="section-title">💪 Fitness</h3>
+        <div class="addBox">
+          <input id="fitnessInput" placeholder="Walk, yoga…" />
+          <button class="btn small neon" onclick="addActivity('fitness')">+</button>
+        </div>
+        <div id="fitnessList" class="chips"></div>
+
+        <h3 class="section-title">📚 Study</h3>
+        <div class="addBox">
+          <input id="studyInput" placeholder="Study tasks…" />
+          <button class="btn small neon" onclick="addActivity('study')">+</button>
+        </div>
+        <div id="studyList" class="chips"></div>
+
+        <h3 class="section-title">🧘 Self-Care</h3>
+        <div class="addBox">
+          <input id="selfInput" placeholder="Meditation, skincare…" />
+          <button class="btn small neon" onclick="addActivity('self')">+</button>
+        </div>
+        <div id="selfList" class="chips"></div>
+      </div>
+    </section>
+
+    <!-- STUDY SCREEN -->
+    <section id="screen-study" class="screen">
+      <div class="card">
+        <h2>📚 Study Today</h2>
+
+        <div class="study-grid">
+
+          <!-- YOU -->
+          <div class="study-item">
+            <h3>👑 You</h3>
+
+            <div class="study-circle">
+              <div class="study-circle-inner" id="myStudyCircleInner">
+                <span id="myStudyHoursText">0 h</span>
+              </div>
+            </div>
+
+            <input
+              type="number"
+              min="0"
+              step="0.25"
+              id="myStudyInput"
+              placeholder="Hours you studied"
+            />
+
+            <button class="btn neon small-full" onclick="saveMyStudy()">Save</button>
+          </div>
+
+          <!-- HER -->
+          <div class="study-item">
+            <h3>👸 Her</h3>
+
+            <div class="study-circle">
+              <div class="study-circle-inner" id="friendStudyCircleInner">
+                <span id="friendStudyHoursText">0 h</span>
+              </div>
+            </div>
+
+            <input
+              type="number"
+              min="0"
+              step="0.25"
+              id="friendStudyInput"
+              placeholder="Hours she studied"
+            />
+
+            <button class="btn neon small-full" onclick="saveFriendStudy()">Save</button>
+          </div>
+
+        </div>
+
+        <p class="mini-text" id="studySummaryText">
+          Log today's study to grow together 🌱
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>📊 7-Day Study Graph</h2>
+        <canvas id="studyChart" height="200"></canvas>
+      </div>
+    </section>
+
+    <!-- PROGRESS SCREEN -->
+    <section id="screen-progress" class="screen">
+      <div class="card">
+        <h2>📈 Wake-Up Progress</h2>
+        <canvas id="progressChart" height="200"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>📅 Cute Calendar</h2>
+        <div id="calendarHeader" class="calendar-header"></div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </div>
+    </section>
+
+    <!-- REWARDS SCREEN -->
+    <section id="screen-rewards" class="screen">
+      <div class="card">
+        <h2>🎁 Reward Badges</h2>
+        <div id="badgeList" class="badge-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>🔥 Streak & ⚔️ Battle</h2>
+
+        <div class="streak-box">
+          <div class="streak-item">
+            <h3>👑 You</h3>
+            <button class="btn neon" onclick="increaseMyStreak()">I woke up</button>
+            <p id="myStreakText" class="badge"></p>
+          </div>
+
+          <div class="streak-item">
+            <h3>👸 Her</h3>
+            <button class="btn neon" onclick="increaseFriendStreak()">She woke up</button>
+            <p id="friendStreakText" class="badge"></p>
+          </div>
+        </div>
+
+        <button class="btn neon stop" onclick="resetStreaks()">🔄 Reset Streaks</button>
+
+        <div class="battle-bar">
+          <div id="meBar" class="me-bar"></div>
+          <div id="friendBar" class="friend-bar"></div>
+        </div>
+
+        <p id="comboStreakText" class="combo"></p>
+        <p id="battleText" class="battle-text"></p>
+      </div>
+    </section>
+
+    <!-- BOTTOM TAB NAVIGATION -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" onclick="showScreen('home', this)">🏠 Home</button>
+      <button class="tab-btn" onclick="showScreen('goals', this)">🎯 Goals</button>
+      <button class="tab-btn" onclick="showScreen('activities', this)">📝 Rituals</button>
+      <button class="tab-btn" onclick="showScreen('study', this)">📚 Study</button>
+      <button class="tab-btn" onclick="showScreen('progress', this)">📊 Progress</button>
+      <button class="tab-btn" onclick="showScreen('rewards', this)">🎁 Rewards</button>
+    </nav>
+
+  </div>
+
+  <!-- RESET CONFIRMATION MODAL -->
+  <div id="resetModal" class="modal">
+    <div class="modal-content">
+      <h2 class="modal-title">Are you sure, princess? 💕</h2>
+      <p class="modal-text">This will reset all streaks and study logs.</p>
+
+      <div class="modal-buttons">
+        <button class="btn neon" onclick="confirmReset()">Yes, reset 💗</button>
+        <button class="btn neon stop" onclick="closeResetModal()">No, keep it 💕</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
+</body>
+</html>
