@@ -1,15 +1,110 @@
 /* -------------------------------------------
-   🌸 MORNING BUDDY PRO - FULL SCRIPT.JS
+   🌸 MORNING BUDDY PRO - CLOUD SYNC VERSION
 -------------------------------------------- */
 
-const STUDY_MAX_HOURS = 8; // daily study goal
+// 1) 🔑 Supabase Config (REPLACE with your own)
+const SUPABASE_URL = "https://oyafevedxciqqqzgbwgu.supabase.co"; // <-- change this
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95YWZldmVkeGNpcXFxemdid2d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNjA2NDQsImV4cCI6MjA4MDkzNjY0NH0.KB2M7h8s1okT6eiTLF_2IrMQpC1KO5g1tH_l1XlwBmg"; // <-- change this
 
-// Helper to get element by id
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 2) General constants
+const STUDY_MAX_HOURS = 8; // daily study goal
+let historyCache = {};     // in-memory copy of all days
+
+// Helper to get element
 function el(id) {
   return document.getElementById(id);
 }
 
-/* HISTORY HELPERS */
+/* ============================================================
+   CLOUD HISTORY (Supabase + local cache)
+============================================================ */
+
+// Load all logs from Supabase into historyCache
+async function syncFromSupabase() {
+  try {
+    const { data, error } = await supa.from("daily_logs").select("*");
+    if (error) {
+      console.error("Supabase load error:", error);
+      historyCache = JSON.parse(localStorage.getItem("history") || "{}");
+      return;
+    }
+
+    historyCache = {};
+    data.forEach(row => {
+      historyCache[row.date] = {
+        me: row.me || false,
+        friend: row.friend || false,
+        studyMe: row.study_me || 0,
+        studyFriend: row.study_friend || 0
+      };
+    });
+
+    localStorage.setItem("history", JSON.stringify(historyCache));
+  } catch (e) {
+    console.error("syncFromSupabase failed:", e);
+    historyCache = JSON.parse(localStorage.getItem("history") || "{}");
+  }
+}
+
+// Get history from memory / localStorage
+function loadHistory() {
+  if (!historyCache || Object.keys(historyCache).length === 0) {
+    historyCache = JSON.parse(localStorage.getItem("history") || "{}");
+  }
+  return historyCache;
+}
+
+// Save updated history object locally + push to Supabase
+async function saveHistory(h) {
+  historyCache = h;
+  localStorage.setItem("history", JSON.stringify(historyCache));
+
+  const rows = Object.entries(historyCache).map(([date, v]) => ({
+    date,
+    me: !!v.me,
+    friend: !!v.friend,
+    study_me: v.studyMe || 0,
+    study_friend: v.studyFriend || 0
+  }));
+
+  if (rows.length === 0) return;
+
+  try {
+    const { error } = await supa.from("daily_logs").upsert(rows);
+    if (error) console.error("Supabase save error:", error);
+  } catch (e) {
+    console.error("saveHistory failed:", e);
+  }
+}
+
+// Recalculate streak from history (for me or friend)
+function calculateStreak(field) {
+  const h = loadHistory();
+  let streak = 0;
+  const today = new Date();
+
+  for (let offset = 0; ; offset++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - offset);
+
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const key = `${y}-${m}-${day}`;
+    const info = h[key];
+
+    if (!info || !info[field]) break;
+    streak++;
+  }
+  return streak;
+}
+
+/* ============================================================
+   BASIC HELPERS (dates etc.)
+============================================================ */
+
 function todayKey() {
   const d = new Date();
   const y = d.getFullYear();
@@ -18,15 +113,10 @@ function todayKey() {
   return `${y}-${m}-${day}`;
 }
 
-function loadHistory() {
-  return JSON.parse(localStorage.getItem("history") || "{}");
-}
+/* ============================================================
+   TABS
+============================================================ */
 
-function saveHistory(h) {
-  localStorage.setItem("history", JSON.stringify(h));
-}
-
-/* TABS */
 function showScreen(name, btn) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active-screen"));
   el("screen-" + name).classList.add("active-screen");
@@ -35,7 +125,10 @@ function showScreen(name, btn) {
   if (btn) btn.classList.add("active");
 }
 
-/* LOTTIE */
+/* ============================================================
+   LOTTIE
+============================================================ */
+
 if (window.lottie && el("lottieBox")) {
   lottie.loadAnimation({
     container: el("lottieBox"),
@@ -46,7 +139,10 @@ if (window.lottie && el("lottieBox")) {
   });
 }
 
-/* MASCOT */
+/* ============================================================
+   MASCOT
+============================================================ */
+
 const mascotLines = [
   "Good morning! I’m proud of you 💕",
   "You’re doing better than you think, princess ✨",
@@ -64,7 +160,10 @@ function rotateMascotMessage() {
 
 setInterval(rotateMascotMessage, 12000);
 
-/* GOALS */
+/* ============================================================
+   GOALS
+============================================================ */
+
 function saveGoals() {
   const myGoal = el("myGoal").value;
   const friendGoal = el("friendGoal").value;
@@ -79,7 +178,10 @@ function saveGoals() {
   }
 }
 
-/* ALARM */
+/* ============================================================
+   ALARM
+============================================================ */
+
 let alarmSound = new Audio("alarm.mp3");
 alarmSound.loop = true;
 
@@ -127,7 +229,10 @@ setInterval(() => {
   }
 }, 60000);
 
-/* ACTIVITIES */
+/* ============================================================
+   ACTIVITIES
+============================================================ */
+
 function addActivity(type) {
   const map = {
     essentials: el("essentialInput"),
@@ -169,7 +274,10 @@ function removeActivity(type, i) {
   loadActivities();
 }
 
-/* FUNNY MESSAGES */
+/* ============================================================
+   FUNNY MESSAGES
+============================================================ */
+
 const messages = [
   "Wake up, sleepy queen 💖",
   "If you wake up now, you gain +100 cute points ✨",
@@ -190,14 +298,14 @@ function typeWriter(text, i = 0) {
   if (i < text.length) setTimeout(() => typeWriter(text, i + 1), 35);
 }
 
-/* STREAKS */
-function increaseMyStreak() {
-  let s = parseInt(localStorage.getItem("myStreak") || "0") + 1;
-  localStorage.setItem("myStreak", s);
+/* ============================================================
+   STREAKS (Wake-up)
+============================================================ */
 
+function increaseMyStreak() {
   let h = loadHistory();
-  let key = todayKey();
-  if (!h[key]) h[key] = {};
+  const key = todayKey();
+  if (!h[key]) h[key] = { me: false, friend: false, studyMe: 0, studyFriend: 0 };
   h[key].me = true;
   saveHistory(h);
 
@@ -208,12 +316,9 @@ function increaseMyStreak() {
 }
 
 function increaseFriendStreak() {
-  let s = parseInt(localStorage.getItem("friendStreak") || "0") + 1;
-  localStorage.setItem("friendStreak", s);
-
   let h = loadHistory();
-  let key = todayKey();
-  if (!h[key]) h[key] = {};
+  const key = todayKey();
+  if (!h[key]) h[key] = { me: false, friend: false, studyMe: 0, studyFriend: 0 };
   h[key].friend = true;
   saveHistory(h);
 
@@ -224,8 +329,8 @@ function increaseFriendStreak() {
 }
 
 function loadStreaks() {
-  const my = parseInt(localStorage.getItem("myStreak") || "0");
-  const fr = parseInt(localStorage.getItem("friendStreak") || "0");
+  const my = calculateStreak("me");
+  const fr = calculateStreak("friend");
 
   if (el("myStreakText")) el("myStreakText").textContent = `🔥 ${my}`;
   if (el("friendStreakText")) el("friendStreakText").textContent = `🔥 ${fr}`;
@@ -276,7 +381,10 @@ function updateBattleText(my, fr) {
   else b.textContent = "Perfect tie 💞";
 }
 
-/* WAKE-UP 7-DAY CHART */
+/* ============================================================
+   7-DAY WAKE-UP CHART
+============================================================ */
+
 let progressChart;
 
 function updateChart() {
@@ -319,7 +427,10 @@ function updateChart() {
   });
 }
 
-/* STUDY TRACKER */
+/* ============================================================
+   STUDY TRACKER (You + Her)
+============================================================ */
+
 function saveMyStudy() {
   const input = el("myStudyInput");
   if (!input) return;
@@ -327,8 +438,8 @@ function saveMyStudy() {
   if (hours < 0) hours = 0;
 
   let h = loadHistory();
-  let key = todayKey();
-  if (!h[key]) h[key] = {};
+  const key = todayKey();
+  if (!h[key]) h[key] = { me: false, friend: false, studyMe: 0, studyFriend: 0 };
   h[key].studyMe = hours;
   saveHistory(h);
 
@@ -344,8 +455,8 @@ function saveFriendStudy() {
   if (hours < 0) hours = 0;
 
   let h = loadHistory();
-  let key = todayKey();
-  if (!h[key]) h[key] = {};
+  const key = todayKey();
+  if (!h[key]) h[key] = { me: false, friend: false, studyMe: 0, studyFriend: 0 };
   h[key].studyFriend = hours;
   saveHistory(h);
 
@@ -384,7 +495,10 @@ function updateStudyUI() {
   }
 }
 
-/* STUDY 7-DAY CHART */
+/* ============================================================
+   STUDY 7-DAY CHART
+============================================================ */
+
 let studyChart;
 
 function updateStudyChart() {
@@ -427,7 +541,10 @@ function updateStudyChart() {
   });
 }
 
-/* CALENDAR with stagger fade */
+/* ============================================================
+   CALENDAR (with stagger fade "blooming")
+============================================================ */
+
 function buildCalendar() {
   const grid = el("calendarGrid");
   const header = el("calendarHeader");
@@ -449,7 +566,7 @@ function buildCalendar() {
 
   let cellIndex = 0;
 
-  // Day names row
+  // Day name row
   dayNames.forEach(d => {
     const cell = document.createElement("div");
     cell.className = "calendar-cell calendar-day-name";
@@ -461,7 +578,7 @@ function buildCalendar() {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // Empty leading cells
+  // Empty cells
   for (let i = 0; i < firstDay; i++) {
     const cell = document.createElement("div");
     cell.className = "calendar-cell dim";
@@ -493,7 +610,10 @@ function buildCalendar() {
   }
 }
 
-/* BADGES */
+/* ============================================================
+   BADGES
+============================================================ */
+
 function updateBadges() {
   const badgeList = el("badgeList");
   if (!badgeList) return;
@@ -532,7 +652,10 @@ function updateBadges() {
   if (totalMyStudy + totalHerStudy >= 30) addBadge("🏆 30+ Hour Study Champions");
 }
 
-/* RESET MODAL */
+/* ============================================================
+   RESET MODAL
+============================================================ */
+
 function resetStreaks() {
   el("resetModal").style.display = "flex";
 }
@@ -542,9 +665,11 @@ function closeResetModal() {
 }
 
 function confirmReset() {
-  localStorage.setItem("myStreak", 0);
-  localStorage.setItem("friendStreak", 0);
+  historyCache = {};
   localStorage.removeItem("history");
+
+  // Clear cloud table
+  supa.from("daily_logs").delete().neq("date", null);
 
   loadStreaks();
   updateChart();
@@ -559,19 +684,33 @@ function confirmReset() {
   }, 150);
 }
 
-/* ON LOAD */
-window.onload = () => {
-  showScreen("home", document.querySelector(".tab-btn.active"));
-  rotateMascotMessage();
+/* ============================================================
+   REFRESH EVERYTHING FROM CLOUD
+============================================================ */
 
-  loadActivities();
+async function refreshAllFromCloud() {
+  await syncFromSupabase();
   loadStreaks();
   updateChart();
   updateStudyUI();
   updateStudyChart();
   buildCalendar();
   updateBadges();
+}
 
+/* ============================================================
+   ON LOAD
+============================================================ */
+
+window.onload = () => {
+  showScreen("home", document.querySelector(".tab-btn.active"));
+  rotateMascotMessage();
+  loadActivities();
+
+  // First sync from Supabase then draw everything
+  refreshAllFromCloud();
+
+  // Restore goals
   const myGoal = localStorage.getItem("myGoal");
   const frGoal = localStorage.getItem("friendGoal");
   if (myGoal && frGoal) {
@@ -583,11 +722,13 @@ window.onload = () => {
     if (el("friendGoal")) el("friendGoal").value = frGoal;
   }
 
+  // Restore alarm
   const alarmTime = localStorage.getItem("alarmTime");
   if (alarmTime) {
     if (el("alarmSavedText")) el("alarmSavedText").textContent = "⏰ Alarm saved: " + alarmTime;
     if (el("alarmTime")) el("alarmTime").value = alarmTime;
   }
 
-  rotateMascotMessage();
+  // Periodically refresh from cloud (approx real-time)
+  setInterval(refreshAllFromCloud, 15000);
 };
