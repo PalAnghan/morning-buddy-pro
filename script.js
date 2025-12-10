@@ -8,6 +8,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+console.log("Supabase client:", supa);
+
 // 2) General constants
 const STUDY_MAX_HOURS = 8; // daily study goal
 let historyCache = {};     // in-memory copy of all days
