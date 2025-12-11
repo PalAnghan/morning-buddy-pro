@@ -1,173 +1,164 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Morning Buddy Pro 💕</title>
-
-    <!-- Prevent Cache (Fixes undefined supa issue) -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css?v=3" />
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#ff9aa5" />
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Lottie Animation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.5/lottie.min.js"></script>
-
-    <!-- Supabase Client (Correct Script!) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js?v=3"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Morning Buddy Pro 💕</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ff9aa5" />
 </head>
-
 <body>
+  <!-- Background + floating decor -->
+  <div class="bg"></div>
+  <div class="float heart h1">💖</div>
+  <div class="float butterfly b1">🦋</div>
 
-    <!-- Background -->
-    <div class="bg"></div>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="app-title">Morning Buddy 🌸</h1>
+      <p class="tag">A cute wake-up world just for her 💕</p>
+    </header>
 
-    <!-- Floating Hearts + Butterflies -->
-    <div class="float heart h1">💕</div>
-    <div class="float heart h2">💖</div>
-    <div class="float heart h3">💓</div>
-    <div class="float butterfly b1">🦋</div>
-    <div class="float butterfly b2">🦋</div>
-
-    <div class="app">
-
-        <!-- Header -->
-        <header class="header">
-            <h1 class="app-title">Morning Buddy 🌸</h1>
-            <p class="tag">A cute wake-up world just for her 💕</p>
-        </header>
-
-        <!-- HOME SCREEN -->
-        <section id="screen-home" class="screen active-screen">
-            <div class="card mascot-card">
-                <div class="mascot-avatar">😊</div>
-                <div id="mascotMessage" class="mascot-message">
-                    Good morning! I'm proud of you 💕
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>💞 Today's Vibe</h2>
-                <p id="goalStatus">Your Goal: -- | Her Goal: --</p>
-                <p id="homeStreakSummary">
-                    No streak yet… your first morning will already be special 💖
-                </p>
-            </div>
-
-            <div class="card">
-                <h2>😅 Cute Message</h2>
-                <button onclick="sendMessage()" class="btn big">Send a smile 💌</button>
-                <div id="messageBox" class="message-box"></div>
-            </div>
-        </section>
-
-        <!-- GOALS -->
-        <section id="screen-goals" class="screen">
-            <div class="card">
-                <h2>🎯 Wake-Up Goals</h2>
-                <label>Your goal:</label>
-                <input id="myGoal" type="time" />
-                <label>Her goal:</label>
-                <input id="friendGoal" type="time" />
-                <button onclick="saveGoals()" class="btn neon">Save Goals 💕</button>
-            </div>
-        </section>
-
-        <!-- ALARM -->
-        <section id="screen-rituals" class="screen">
-            <div class="card">
-                <h2>⏰ Cute Alarm</h2>
-                <input id="alarmTime" type="time" />
-                <p id="alarmSavedText"></p>
-                <button onclick="saveAlarmTime()" class="btn neon">Save Alarm 💗</button>
-                <button onclick="stopAlarm()" class="btn stop">Stop Alarm ❌</button>
-            </div>
-        </section>
-
-        <!-- STUDY -->
-        <section id="screen-study" class="screen">
-            <div class="card">
-                <h2>📚 Study Log</h2>
-
-                <label>You studied (hours):</label>
-                <input id="myStudyInput" type="number" step="0.1" min="0" />
-                <button onclick="saveMyStudy()" class="btn neon">Save</button>
-
-                <label>She studied (hours):</label>
-                <input id="friendStudyInput" type="number" step="0.1" min="0" />
-                <button onclick="saveFriendStudy()" class="btn neon">Save</button>
-
-                <p id="studySummaryText"></p>
-
-                <canvas id="studyChart" height="120"></canvas>
-            </div>
-        </section>
-
-        <!-- PROGRESS -->
-        <section id="screen-progress" class="screen">
-            <div class="card">
-                <h2>📅 Monthly Calendar</h2>
-                <h3 id="calendarHeader"></h3>
-                <div id="calendarGrid" class="calendar-grid"></div>
-            </div>
-
-            <div class="card">
-                <h2>📈 Wake-Up Streak Chart</h2>
-                <canvas id="progressChart" height="120"></canvas>
-            </div>
-        </section>
-
-        <!-- REWARDS -->
-        <section id="screen-rewards" class="screen">
-            <div class="card">
-                <h2>🎁 Reward Badges</h2>
-                <div id="badgeList" class="badge-list"></div>
-            </div>
-
-            <div class="card">
-                <button onclick="resetStreaks()" class="btn stop">Reset Everything ❌</button>
-            </div>
-        </section>
-
-        <!-- Navigation Tabs -->
-        <nav class="tabs">
-            <button class="tab-btn active" onclick="showScreen('home', this)">🏡 Home</button>
-            <button class="tab-btn" onclick="showScreen('goals', this)">🎯 Goals</button>
-            <button class="tab-btn" onclick="showScreen('rituals', this)">⏰ Rituals</button>
-            <button class="tab-btn" onclick="showScreen('study', this)">📘 Study</button>
-            <button class="tab-btn" onclick="showScreen('progress', this)">📈 Progress</button>
-            <button class="tab-btn" onclick="showScreen('rewards', this)">🎁 Rewards</button>
-        </nav>
-    </div>
-
-    <!-- Reset Modal -->
-    <div id="resetModal" class="modal">
-        <div class="modal-content">
-            <p>This will clear all your streaks and study logs 💔</p>
-            <div class="modal-buttons">
-                <button onclick="confirmReset()" class="btn neon">Yes, reset 💞</button>
-                <button onclick="closeResetModal()" class="btn stop">No, keep it 💗</button>
-            </div>
+    <!-- HOME SCREEN -->
+    <section id="screen-home" class="screen active-screen">
+      <div class="card mascot-card">
+        <div class="mascot-avatar">🌸</div>
+        <div class="mascot-content">
+          <div id="mascotMessage">Good morning! I’m proud of you 💕</div>
         </div>
+        <div class="mascot-actions">
+          <button class="btn small" onclick="rotateMascotMessage()">Refresh ✨</button>
+        </div>
+      </div>
+
+      <div class="card vibe-card">
+        <h2>Today's Vibe</h2>
+        <p id="goalStatus">🌅 Your Goal: -- | 👸 Her Goal: --</p>
+        <p id="homeStreakSummary">No streak yet… your first morning will already be special 💖</p>
+      </div>
+
+      <div class="card message-card">
+        <h3>😍 Cute Message</h3>
+        <div id="messageBox">Wake up, sleepy queen 💖</div>
+        <div class="center">
+          <button class="btn neon" onclick="sendMessage()">Send a smile 💌</button>
+        </div>
+      </div>
+
+      <div class="card actions-card">
+        <div class="row">
+          <button class="btn" onclick="increaseMyStreak()">I woke up ☀️</button>
+          <button class="btn" onclick="increaseFriendStreak()">She woke up 👸</button>
+        </div>
+      </div>
+
+      <div class="card stats-card">
+        <div class="battle">
+          <div id="battleText">Start your morning battle ⚔️</div>
+          <div class="battle-bar">
+            <div id="meBar" class="bar me"></div>
+            <div id="friendBar" class="bar her"></div>
+          </div>
+        </div>
+        <div class="streaks">
+          <div>You: <span id="myStreakText">🔥 0</span></div>
+          <div>Her: <span id="friendStreakText">🔥 0</span></div>
+          <div id="comboStreakText"></div>
+        </div>
+      </div>
+
+      <div class="card charts-card">
+        <h4>7-day Wake-up Chart</h4>
+        <canvas id="progressChart" width="400" height="120"></canvas>
+      </div>
+
+      <div class="card study-card">
+        <h4>Study Tracker</h4>
+        <div class="study-inputs">
+          <input id="myStudyInput" type="number" step="0.5" placeholder="Your hours" />
+          <button class="btn" onclick="saveMyStudy()">Save</button>
+          <input id="friendStudyInput" type="number" step="0.5" placeholder="Her hours" />
+          <button class="btn" onclick="saveFriendStudy()">Save</button>
+        </div>
+        <div class="study-summary">
+          <div id="myStudyHoursText">0 h</div>
+          <div id="friendStudyHoursText">0 h</div>
+        </div>
+        <canvas id="studyChart" width="400" height="120"></canvas>
+      </div>
+
+      <div class="card calendar-card">
+        <h4>Calendar</h4>
+        <div id="calendarHeader" class="calendar-header"></div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </div>
+
+      <div class="card badges-card">
+        <h4>Rewards</h4>
+        <div id="badgeList" class="badge-list"></div>
+      </div>
+
+    </section>
+
+    <!-- GOALS SCREEN (hidden by default) -->
+    <section id="screen-goals" class="screen">
+      <div class="card">
+        <h3>Set Wake-up Goals</h3>
+        <input id="myGoal" type="time" />
+        <input id="friendGoal" type="time" />
+        <div class="row">
+          <button class="btn" onclick="saveGoals()">Save Goals</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Alarm</h3>
+        <input id="alarmTime" type="time" />
+        <div class="row">
+          <button class="btn" onclick="saveAlarmTime()">Save Alarm</button>
+          <div id="alarmSavedText"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- NAVIGATION -->
+    <nav class="tabs">
+      <button class="tab-btn active" onclick="showScreen('home', this)">🏠 Home</button>
+      <button class="tab-btn" onclick="showScreen('goals', this)">🎯 Goals</button>
+      <button class="tab-btn" onclick="showScreen('study', this)">📚 Study</button>
+      <button class="tab-btn" onclick="showScreen('progress', this)">📈 Progress</button>
+      <button class="tab-btn" onclick="resetStreaks()">🔁 Reset</button>
+    </nav>
+
+  </div>
+
+  <!-- Reset modal -->
+  <div id="resetModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <p>This will reset all streaks and study logs.</p>
+      <div class="modal-buttons">
+        <button class="btn neon" onclick="confirmReset()">Yes, reset 💖</button>
+        <button class="btn stop" onclick="closeResetModal()">No, keep it 💕</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Main App Script -->
-    <script src="script.js?v=3"></script>
+  <!-- External libs (order matters) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.5/lottie.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-    <!-- Service Worker -->
-    <script>
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("sw.js");
-        }
-    </script>
+  <!-- Main app script (your script.js) -->
+  <script src="script.js?v=4"></script>
 
+  <!-- Service worker registration (optional) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    }
+  </script>
 </body>
 </html>
